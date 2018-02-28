@@ -486,3 +486,44 @@
                                                    :card_id          (u/get-id series-card)
                                                    :position         0}]
           (:status (http/client :get 200 (str (dashcard-url (assoc dashcard :card_id (u/get-id series-card)))))))))))
+
+
+;;; ------------------------------- GET /api/embed/card/:token/field/:field-id/values --------------------------------
+
+(defn- field-values-url [card-or-dashboard field-or-id]
+  (str
+   "embed/"
+   (condp instance? card-or-dashboard
+     (class Card)      (str "card/" (card-token card-or-dashboard))
+     (class Dashboard) (str "dashboard/" (dash-token card-or-dashboard)))
+   "/field/"
+   (u/get-id field-or-id)
+   "/values"))
+
+;; Check that we can get FieldValues for a Field referenced by a Card
+(expect
+  :wow
+  (with-embedding-enabled-and-new-secret-key
+    (tt/with-temp Card [card {:dataset_query
+                              {:database (data/id)
+                               :type     :query
+                               :query    {:source-table (data/id :venues)
+                                          :filter       [:= [:field-id (data/id :venues :name)] "Krua Siri"]}}}]
+      (http/client :get 200 (field-values-url card (data/id :venues :name))))))
+
+;; Check that if the Field is *not* referenced by the Card we are *not* allowed to get its values
+
+;;; ----------------------------- GET /api/embed/dashboard/:token/field/:field-id/values -----------------------------
+;; TODO
+
+;;; ----------------------- GET /api/embed/card/:token/field/:field-id/search/:search-field-id -----------------------
+;; TODO
+
+;;; -------------------- GET /api/embed/dashboard/:token/field/:field-id/search/:search-field-id ---------------------
+;; TODO
+
+;;; ----------------------- GET /api/embed/card/:token/field/:field-id/remapping/:remapped-id ------------------------
+;; TODO
+
+;;; --------------------- GET /api/embed/dashboard/:token/field/:field-id/remapping/:remapped-id ---------------------
+;; TODO
